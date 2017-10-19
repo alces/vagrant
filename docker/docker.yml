@@ -1,0 +1,19 @@
+- name: Install docker
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install packages
+    yum:
+      name: docker
+
+  - name: Enable service
+    service:
+      name: docker
+      enabled: yes
+      state: started
+
+  - name: Add user to docker group
+    user:
+      name: vagrant
+      groups: root
+      append: yes
