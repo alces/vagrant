@@ -1,0 +1,24 @@
+- name: Set local facts
+  set_fact:
+    firstServer: 192.168.168.11
+    nomadDir: /opt/nomad
+    nomadVersion: '0.7.1'
+
+- name: Set second-level facts
+  set_fact:
+    nomadDataDir: "{{ nomadDir }}/data"
+
+- name: Install required packages
+  yum:
+    name: unzip
+
+- name: Make directory
+  file:
+    name: "{{ nomadDir }}"
+    state: directory
+
+- name: Download nomad
+  unarchive:
+    dest: "{{ nomadDir }}"
+    remote_src: yes
+    src: "https://releases.hashicorp.com/nomad/{{ nomadVersion }}/nomad_{{ nomadVersion }}_linux_amd64.zip"

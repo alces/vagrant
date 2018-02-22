@@ -1,0 +1,31 @@
+- name: Install nomad
+  hosts: all
+  become: yes
+  tasks:
+  - import_tasks: common.yml
+
+  - name: Add nomad user
+    user:
+      name: nomad
+      group: root
+      home: "{{ nomadDataDir }}"
+
+  - name: Create data directory
+    file:
+      name: "{{ nomadDataDir }}"
+      owner: nomad
+      state: directory
+
+  - name: Set server facts
+    set_fact:
+      configFile: "{{ nomadDataDir }}/server.hcl"
+
+  - name: Create config file
+    template:
+      src: server.hcl.j2
+      dest: "{{ configFile }}"
+
+  - name: Start server
+    shell: "nohup sudo -u nomad {{ nomadDir }}/nomad agent -config={{ configFile }} > {{ nomadDataDir }}/server.out 2>&1 &"
+    args:
+      chdir: "{{ nomadDataDir }}"

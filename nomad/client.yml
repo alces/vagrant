@@ -1,0 +1,42 @@
+- name: Install nomad
+  hosts: all
+  become: yes
+  tasks:
+  - import_tasks: common.yml
+
+  - name: Install packages required for drivers
+    yum:
+      name:
+      - docker
+      - java-1.8.0-openjdk
+
+  - name: Enable docker service
+    service:
+      name: docker
+      enabled: yes
+      state: started
+
+  - name: Add user to docker group
+    user:
+      name: vagrant
+      groups: root
+      append: yes
+
+  - name: Create data directory
+    file:
+      name: "{{ nomadDataDir }}"
+      state: directory
+
+  - name: Set client facts
+    set_fact:
+      configFile: "{{ nomadDataDir }}/client.hcl"
+
+  - name: Create config file
+    template:
+      src: client.hcl.j2
+      dest: "{{ configFile }}"
+
+  - name: Start client
+    shell: "nohup {{ nomadDir }}/nomad agent -config={{ configFile }} > {{ nomadDataDir }}/client.out 2>&1 &"
+    args:
+      chdir: "{{ nomadDataDir }}"

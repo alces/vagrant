@@ -1,0 +1,11 @@
+log_level = "INFO"
+data_dir = "{{ nomadDataDir }}"
+advertise {
+{% for proto in ['http', 'rpc', 'serf'] %}
+  {{ proto }} = "{{ ansible_eth1.ipv4.address }}"
+{% endfor %}
+}
+client {
+    enabled = true
+    servers = ["{{ firstServer }}:4647"]
+}

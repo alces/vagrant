@@ -1,0 +1,16 @@
+log_level = "INFO"
+data_dir = "{{ nomadDataDir }}"
+advertise {
+{% for proto in ['http', 'rpc', 'serf'] %}
+  {{ proto }} = "{{ ansible_eth1.ipv4.address }}"
+{% endfor %}
+}
+server {
+    enabled = true
+{% if ansible_eth1.ipv4.address == firstServer %}
+    bootstrap_expect = 1
+{% else %}
+    bootstrap_expect = 2
+    retry_join = ["{{ firstServer }}:4648"]
+{% endif %}
+}
