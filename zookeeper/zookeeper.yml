@@ -2,6 +2,7 @@
   hosts: all
   become: yes
   vars:
+    zookeeperTgz: "{{ playbook_dir }}/zookeeper.tgz"
     zookeeperVersion: '3.4.11'
     zookeeperDir: "/opt/zookeeper-{{ zookeeperVersion }}"
     zookeeperDataDir: "{{ zookeeperDir }}/data"
@@ -27,10 +28,19 @@
       owner: zookeeper
       state: directory
 
+  - name: Download zookeeper
+    get_url:
+      dest: "{{ zookeeperTgz }}"
+      timeout: 600
+      url: "http://mirror.linux-ia64.org/apache/zookeeper/zookeeper-{{ zookeeperVersion }}/zookeeper-{{ zookeeperVersion }}.tar.gz"
+    become: no
+    delegate_to: localhost
+    run_once: yes
+
   - name: Unpack zookeeper
     unarchive:
       dest: "{{ zookeeperDir | dirname }}"
-      src: "http://mirror.linux-ia64.org/apache/zookeeper/zookeeper-{{ zookeeperVersion }}/zookeeper-{{ zookeeperVersion }}.tar.gz"
+      src: "{{ zookeeperTgz }}"
 
   - name: Create zoo.cfg
     template:
