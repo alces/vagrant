@@ -1,0 +1,48 @@
+- name: Install zookeeper cluster
+  hosts: all
+  become: yes
+  vars:
+    zookeeperVersion: '3.4.11'
+    zookeeperDir: "/opt/zookeeper-{{ zookeeperVersion }}"
+    zookeeperDataDir: "{{ zookeeperDir }}/data"
+
+  tasks:
+  - name: Install required packages
+    yum:
+      name: java-1.8.0-openjdk
+
+  - name: Create group
+    group:
+      name: zookeeper
+
+  - name: Create user
+    user:
+      name: zookeeper
+      group: zookeeper
+      home: "{{ zookeeperDir }}"
+
+  - name: Make directory
+    file:
+      name: "{{ zookeeperDataDir }}"
+      owner: zookeeper
+      state: directory
+
+  - name: Unpack zookeeper
+    unarchive:
+      dest: "{{ zookeeperDir | dirname }}"
+      src: "http://mirror.linux-ia64.org/apache/zookeeper/zookeeper-{{ zookeeperVersion }}/zookeeper-{{ zookeeperVersion }}.tar.gz"
+
+  - name: Create zoo.cfg
+    template:
+      src: zoo.cfg.j2
+      dest: "{{ zookeeperDir }}/zoo.cfg"
+
+  - name: Create myid
+    template:
+      src: myid.j2
+      dest: "{{ zookeeperDataDir }}/myid"
+
+  - name: Start zookeeper
+    shell: "sudo -u zookeeper nohup java -cp zookeeper-{{ zookeeperVersion }}.jar:lib/slf4j-api-1.6.1.jar:lib/slf4j-log4j12-1.6.1.jar:lib/log4j-1.2.16.jar:conf org.apache.zookeeper.server.quorum.QuorumPeerMain zoo.cfg > {{ zookeeperDir }}/nohup.out 2>&1 &"
+    args:
+      chdir: "{{ zookeeperDir }}"
