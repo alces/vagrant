@@ -3,16 +3,22 @@
   hosts: all
   vars:
     BinDir: /opt/bin
+    ConsulConfig: /etc/consul.json
+    ConsulDataDir: /opt/consul
   tasks:
   - name: Install required packages
     yum:
       name:
+      - net-tools
       - unzip
 
-  - name: Make installation directory
+  - name: Make required directories
     file:
-      path: "{{ BinDir }}"
+      path: "{{ item }}"
       state: directory
+    with_items:
+    - "{{ BinDir }}"
+    - "{{ ConsulDataDir }}"
 
   - name: Download Consul and Vault
     unarchive:
@@ -22,3 +28,22 @@
     with_dict:
       consul: 1.0.6
       vault: 0.10.0
+
+  - name: Create Consul config
+    template:
+      src: "templates/{{ ConsulConfig | basename }}.j2"
+      dest: "{{ ConsulConfig }}"
+    register: consulCfg
+
+  - name: Create Consul service
+    template:
+      src: templates/consul.service.j2
+      dest: /usr/lib/systemd/system/consul.service
+    register: consulSrv
+
+  - name: Start Consul service
+    systemd:
+      name: consul
+      daemon_reload: "{{ consulSrv.changed }}"
+      enabled: yes
+      state: "{{ 'restarted' if consulCfg.changed else 'started' }}"

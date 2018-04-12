@@ -1,0 +1,17 @@
+[Unit]
+Description=Hashicorp Consul
+Documentation=http://www.consul.io
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart={{ BinDir }}/consul agent -config-file "{{ ConsulConfig }}"
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+Restart=always
+StartLimitBurst=0
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
