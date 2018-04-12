@@ -1,0 +1,24 @@
+- name: Install Vault server
+  become: yes
+  hosts: all
+  vars:
+    BinDir: /opt/bin
+  tasks:
+  - name: Install required packages
+    yum:
+      name:
+      - unzip
+
+  - name: Make installation directory
+    file:
+      path: "{{ BinDir }}"
+      state: directory
+
+  - name: Download Consul and Vault
+    unarchive:
+      src: "https://releases.hashicorp.com/{{ item.key }}/{{ item.value }}/{{ item.key }}_{{ item.value }}_linux_amd64.zip"
+      dest: "{{ BinDir }}"
+      remote_src: yes
+    with_dict:
+      consul: 1.0.6
+      vault: 0.10.0
