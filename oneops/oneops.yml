@@ -24,3 +24,11 @@
       dest: /home/vagrant/oneops
       repo: https://github.com/oneops/oneops.git
     become: no
+
+  - name: Set environment
+    blockinfile:
+      path: /etc/environment
+      block: |
+        LANG=en_US.utf-8
+        LC_ALL=en_US.utf-8
+      create: yes
