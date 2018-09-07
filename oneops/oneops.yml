@@ -1,0 +1,26 @@
+- name: Build OneOps
+  become: yes
+  hosts: all
+  tasks:
+  - name: Install packages
+    yum:
+      name:
+      - gcc
+      - git
+      - java-1.8.0-openjdk-devel
+      - postgresql-devel
+      - ruby-devel
+
+  - name: Install ruby gems
+    gem:
+      name: "{{ item }}"
+    with_items:
+    - bundler
+    - graphviz
+    - pg
+
+  - name: Clone repository
+    git:
+      dest: /home/vagrant/oneops
+      repo: https://github.com/oneops/oneops.git
+    become: no
