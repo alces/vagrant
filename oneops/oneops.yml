@@ -14,6 +14,7 @@
   - name: Install ruby gems
     gem:
       name: "{{ item }}"
+      user_install: no
     with_items:
     - bundler
     - graphviz
