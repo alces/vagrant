@@ -6,6 +6,7 @@
     yum:
       name:
       - gcc
+      - gcc-c++
       - git
       - java-1.8.0-openjdk-devel
       - postgresql-devel
@@ -18,7 +19,6 @@
     with_items:
     - bundler
     - graphviz
-    - pg
 
   - name: Clone repository
     git:
