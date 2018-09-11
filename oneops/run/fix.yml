@@ -1,0 +1,20 @@
+- name: Add missing parts to OneOps
+  become: yes
+  hosts: all
+  tasks:
+  - name: Install EPEL
+    yum:
+      name: epel-release
+
+  - name: Install PIP
+    yum:
+      name: python-pip
+
+  - name: Install looper
+    pip:
+      name: https://github.com/pepkit/looper/zipball/v0.9.1
+
+  - name: Install ruby gems
+    gem:
+      name: fog-azure-rm
+      user_install: no
