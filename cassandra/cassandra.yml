@@ -1,0 +1,16 @@
+- name: Install cassandra
+  become: yes
+  hosts: all
+  tasks:
+  - name: Add repository
+    copy:
+      dest: /etc/yum.repos.d/cassandra.repo
+      src: cassandra.repo
+  - name: Install package
+    yum:
+      name: cassandra
+  - name: Start service
+    service:
+      name: cassandra
+      enabled: yes
+      state: started
