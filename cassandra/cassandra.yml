@@ -1,16 +1,32 @@
 - name: Install cassandra
   become: yes
   hosts: all
+  vars:
+    cassandra_cfg: /etc/cassandra/conf/cassandra.yaml
   tasks:
   - name: Add repository
     copy:
       dest: /etc/yum.repos.d/cassandra.repo
       src: cassandra.repo
-  - name: Install package
+  - name: Install packages
     yum:
-      name: cassandra
+      name: 
+      - cassandra
+      - net-tools
+  - name: Delete listen address
+    lineinfile:
+      path: "{{ cassandra_cfg }}"
+      regexp: '^listen_address:'
+      state: absent
+    register: cassandra_addr
+  - name: Set listen interface
+    lineinfile:
+      path: "{{ cassandra_cfg }}"
+      line: 'listen_interface: eth1'
+      regexp: '^listen_interface:'
+    register: cassandra_int
   - name: Start service
     service:
       name: cassandra
       enabled: yes
-      state: started
+      state: "{{ 'restarted' if cassandra_addr.changed or cassandra_int.changed else 'started' }}"
