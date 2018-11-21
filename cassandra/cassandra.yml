@@ -25,8 +25,14 @@
       line: 'listen_interface: eth1'
       regexp: '^listen_interface:'
     register: cassandra_int
+  - name: Set seeds list
+    lineinfile:
+      path: "{{ cassandra_cfg }}"
+      line: '          - seeds: "192.168.168.11,192.168.168.12,192.168.168.13"'
+      regexp: ' - seeds: '
+    register: cassandra_seed
   - name: Start service
     service:
       name: cassandra
       enabled: yes
-      state: "{{ 'restarted' if cassandra_addr.changed or cassandra_int.changed else 'started' }}"
+      state: "{{ 'restarted' if cassandra_addr.changed or cassandra_int.changed or cassandra_seed.changed else 'started' }}"
