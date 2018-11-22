@@ -5,6 +5,11 @@
     cassandra_cfg: /etc/cassandra/conf/cassandra.yaml
     listen_int: eth1
   tasks:
+  - name: Make list of nodes
+    set_fact:
+      nodes_list: "{{ (nodes_list | default([])) + [hostvars[item]['ansible_' + listen_int].ipv4.address] }}"
+    with_items: "{{ groups.all }}"
+
   - name: Add repository
     copy:
       dest: /etc/yum.repos.d/cassandra.repo
@@ -33,7 +38,7 @@
   - name: Set seeds list
     replace:
       path: "{{ cassandra_cfg }}"
-      replace: '\1 "192.168.168.11,192.168.168.12,192.168.168.13"'
+      replace: '\1 "{{ nodes_list | join(",") }}"'
       regexp: '^(\s+ - seeds:) .+$'
     register: cassandra_seed
 
