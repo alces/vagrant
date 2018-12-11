@@ -4,13 +4,22 @@
   tasks:
   - name: Install packages
     yum:
-      name: docker
+      name:
+      - docker
+      - net-tools
+
+  - name: Make docker listen to network
+    lineinfile:
+      path: /etc/sysconfig/docker
+      regexp: '^OPTIONS='
+      line: "OPTIONS='-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock --selinux-enabled --log-driver=journald --signature-verification=false'"
+    register: docker_config
 
   - name: Enable service
     service:
       name: docker
       enabled: yes
-      state: started
+      state: "{{ 'restarted' if docker_config.changed else 'started' }}"
 
   - name: Add user to docker group
     user:
