@@ -8,7 +8,7 @@
   - name: Make list of nodes
     set_fact:
       nodes_list: "{{ (nodes_list | default([])) + [hostvars[item]['ansible_' + listen_int].ipv4.address] }}"
-    with_items: "{{ groups.all }}"
+    with_items: "{{ groups.all | sort() }}"
 
   - name: Add repository
     copy:
@@ -38,7 +38,7 @@
   - name: Set seeds list
     replace:
       path: "{{ cassandra_cfg }}"
-      replace: '\1 "{{ nodes_list | join(",") }}"'
+      replace: '\1 "{{ nodes_list[:3] | join(",") }}"'
       regexp: '^(\s+ - seeds:) .+$'
     register: cassandra_seed
 
