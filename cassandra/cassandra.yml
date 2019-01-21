@@ -2,7 +2,8 @@
   become: yes
   hosts: all
   vars:
-    cassandra_cfg: /etc/cassandra/conf/cassandra.yaml
+    cassandra_dir: /etc/cassandra/conf
+    cassandra_cfg: "{{ cassandra_dir }}/cassandra.yaml"
     listen_int: eth1
   tasks:
   - name: Make list of nodes
@@ -42,8 +43,22 @@
       regexp: '^(\s+ - seeds:) .+$'
     register: cassandra_seed
 
+  - name: Set snitch type
+    replace:
+      path: "{{ cassandra_cfg }}"
+      replace: '\1 GossipingPropertyFileSnitch'
+      regexp: '^(endpoint_snitch:) .+$'
+    register: cassandra_snitch
+
+  - name: Set datacenter name
+    lineinfile:
+      path: "{{ cassandra_dir }}/cassandra-rackdc.properties"
+      line: "dc={{ ansible_fqdn.split('.')[0] }}"
+      regexp: '^dc='
+    register: cassandra_dc
+
   - name: Start service
     service:
       name: cassandra
       enabled: yes
-      state: "{{ 'restarted' if cassandra_addr.changed or cassandra_int.changed or cassandra_seed.changed else 'started' }}"
+      state: "{{ 'restarted' if cassandra_addr.changed or cassandra_dc.changed or cassandra_int.changed or cassandra_seed.changed or cassandra_snitch.changed else 'started' }}"
