@@ -9,6 +9,7 @@
       name:
       - check
       - gcc
+      - gcc-c++
       - httpd
       - httpd-devel
       - jansson-devel
@@ -19,14 +20,23 @@
       - pkgconfig
       - zlib-devel
 
-  - name: Download and unpack libjwt source
+  - name: Download and unpack sources
     unarchive:
-      src: "{{ libjwt_url }}"
+      src: "{{ item }}"
       dest: "{{ build_dir }}"
       remote_src: yes
+    with_items:
+    - "{{ libjwt_url }}"
+    - "{{ mod_authnz_jwt_url }}"
 
   - name: Build and install libjwt
     shell: "autoreconf -i && ./configure && make install"
     args:
       chdir: "{{ build_dir }}/libjwt-{{ libjwt_version }}"
       creates: /usr/local/lib/libjwt.so.0
+
+  - name: Build and install mod_authnz_jwt
+    shell: "autoreconf -i && PKG_CONFIG_PATH=/usr/local/lib/pkgconfig ./configure && make install"
+    args:
+      chdir: "{{ build_dir }}/mod_authnz_jwt-{{ mod_authnz_jwt_version }}"
+      creates: /usr/lib64/httpd/modules/mod_authnz_jwt.so
