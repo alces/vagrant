@@ -1,0 +1,3 @@
+build_dir: /tmp
+libjwt_version: '1.10.1'
+libjwt_url: "https://github.com/benmcollins/libjwt/archive/v{{ libjwt_version }}.tar.gz"

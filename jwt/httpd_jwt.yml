@@ -1,0 +1,32 @@
+- name: Install httpd with mod_authnz_jwt
+  hosts: all
+  become: yes
+  vars_files:
+  - httpd_jwt_vars.yml
+  tasks:
+  - name: Install prerequisites
+    yum:
+      name:
+      - check
+      - gcc
+      - httpd
+      - httpd-devel
+      - jansson-devel
+      - libtool
+      - make
+      - net-tools
+      - openssl-devel
+      - pkgconfig
+      - zlib-devel
+
+  - name: Download and unpack libjwt source
+    unarchive:
+      src: "{{ libjwt_url }}"
+      dest: "{{ build_dir }}"
+      remote_src: yes
+
+  - name: Build and install libjwt
+    shell: "autoreconf -i && ./configure && make install"
+    args:
+      chdir: "{{ build_dir }}/libjwt-{{ libjwt_version }}"
+      creates: /usr/local/lib/libjwt.so.0
