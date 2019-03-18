@@ -1,6 +1,7 @@
 build_dir: /tmp
 httpd_passwd_file: /etc/httpd/conf/htpasswd
 httpd_protected_dir: /var/www/html/protected
+jwt_token_days: 365
 libjwt_version: '1.10.1'
 libjwt_url: "https://github.com/benmcollins/libjwt/archive/v{{ libjwt_version }}.tar.gz"
 mod_authnz_jwt_version: '1.1.3'

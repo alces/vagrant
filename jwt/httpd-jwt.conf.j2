@@ -3,6 +3,7 @@ LoadModule auth_jwt_module /usr/lib64/httpd/modules/mod_authnz_jwt.so
 AuthJWTSignatureAlgorithm HS256
 AuthJWTSignatureSharedSecret verysecret
 AuthJWTIss griddynamics.net
+AuthJWTExpDelay "{{ jwt_token_days * 24 * 3600 }}"
 
 <Location /login>
   SetHandler jwt-login-handler
