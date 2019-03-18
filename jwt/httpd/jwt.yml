@@ -2,7 +2,7 @@
   hosts: all
   become: yes
   vars_files:
-  - httpd_jwt_vars.yml
+  - jwt_vars.yml
   tasks:
   - name: Install prerequisites
     yum:
@@ -63,7 +63,7 @@
 
   - name: Generate JWT config
     template:
-      src: httpd-jwt.conf.j2
+      src: jwt.conf.j2
       dest: /etc/httpd/conf.d/jwt.conf
       owner: apache
       mode: 0400
