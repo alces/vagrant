@@ -40,3 +40,30 @@
     args:
       chdir: "{{ build_dir }}/mod_authnz_jwt-{{ mod_authnz_jwt_version }}"
       creates: /usr/lib64/httpd/modules/mod_authnz_jwt.so
+
+  - name: Create root for protected area
+    file:
+      path: "{{ httpd_protected_dir }}"
+      state: directory
+
+  - name: Put the main page into it
+    copy:
+      src: index.html
+      dest: "{{ httpd_protected_dir }}"
+
+  - name: Upload htpasswd file
+    copy:
+      src: htpasswd
+      dest: "{{ httpd_passwd_file }}"
+
+  - name: Generate JWT config
+    template:
+      src: httpd-jwt.conf.j2
+      dest: /etc/httpd/conf.d/jwt.conf
+    register: jwt_cfg
+
+  - name: Restart httpd
+    service:
+      name: httpd
+      enabled: yes
+      state: "{{ 'restarted' if jwt_cfg.changed else 'started' }}"
