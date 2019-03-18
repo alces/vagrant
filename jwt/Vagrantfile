@@ -1,9 +1,16 @@
 Vagrant.configure(2) do |config|
   config.vm.box = 'centos/7'
-  config.vm.hostname = 'jwt.griddynamics.net'
-  config.vm.network :private_network, ip: '192.168.168.17'
-  config.vm.provision :ansible do |ansible|
-    ansible.playbook = 'httpd_jwt.yml'
-    ansible.raw_arguments = ['-v']
+  (1..2).each do |num|
+    config.vm.define "jwt#{num}" do |host|
+      host.vm.hostname = "jwt-#{num}.griddynamics.net"
+      host.vm.network :private_network, ip: "192.168.168.1#{num}"
+      if num == 2
+        host.vm.provision :ansible do |ansible|
+          ansible.limit = 'all'
+          ansible.playbook = 'httpd_jwt.yml'
+          ansible.raw_arguments = ['-v']
+        end
+      end
+    end
   end
 end
