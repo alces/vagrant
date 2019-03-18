@@ -1,7 +1,7 @@
 LoadModule auth_jwt_module /usr/lib64/httpd/modules/mod_authnz_jwt.so
 
 AuthJWTSignatureAlgorithm HS256
-AuthJWTSignatureSharedSecret verysecret
+AuthJWTSignatureSharedSecret {{ jwt_shared_secret | b64encode }}
 AuthJWTIss griddynamics.net
 AuthJWTExpDelay "{{ jwt_token_days * 24 * 3600 }}"
 
