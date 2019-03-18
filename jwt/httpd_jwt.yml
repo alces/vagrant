@@ -56,6 +56,11 @@
       src: htpasswd
       dest: "{{ httpd_passwd_file }}"
 
+  - name: Upload username/password input form
+    copy:
+      src: get_token.html
+      dest: /var/www/html
+
   - name: Generate JWT config
     template:
       src: httpd-jwt.conf.j2
