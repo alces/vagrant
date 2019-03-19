@@ -1,0 +1,52 @@
+- name: Install caddy with jwt
+  hosts: all
+  become: yes
+  vars_files:
+  - jwt_vars.yml
+  tasks:
+  - name: Create caddy dir
+    file:
+      path: "{{ caddy_www_root }}"
+      state: directory
+
+  - name: Create user for caddy
+    user:
+      name: caddy
+      home: "{{ caddy_ssl_dir }}"
+      shell: /sbin/nologin
+
+  - name: Create caddy log dir
+    file:
+      path: "{{ caddy_logs_dir }}"
+      state: directory
+      owner: caddy
+
+  # can be downloaded from https://caddyserver.com/download
+  - name: Unpack caddy
+    unarchive:
+      src: "caddy_v{{ caddy_version }}.tar.gz"
+      dest: "{{ caddy_root }}"
+
+  - name: Put index.html in www_root
+    copy:
+      src: index.html
+      dest: "{{ caddy_www_root }}"
+
+  - name: Put caddy service definition
+    template:
+      src: caddy.service.j2
+      dest: /etc/systemd/system/caddy.service
+    register: caddy_service
+
+  - name: Put Caddyfile
+    template:
+      src: Caddyfile.j2
+      dest: "{{ caddy_conf }}"
+    register: caddy_cfg
+
+  - name: Restart caddy service
+    systemd:
+      name: caddy
+      daemon_reload: "{{ caddy_service.changed }}"
+      enabled: yes
+      state: "{{ 'restarted' if caddy_cfg.changed or caddy_service.changed else 'started' }}"
