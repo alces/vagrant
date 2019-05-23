@@ -2,16 +2,35 @@
   become: yes
   hosts: all
   gather_facts: no
+  vars:
+    ranger_build_dir: /var/tmp
+    ranger_dir: /usr/local
+    ranger_tgz: /var/tmp/ranger.tgz
+    ranger_version: 1.2.0
   tasks:
   - name: Install packages
     yum:
       name:
       - java-1.8.0-openjdk
-      - net-tools
       - mariadb-server
+      - maven
+      - net-tools
 
   - name: Start MySQL service
     service:
       name: mariadb
       enabled: yes
       state: started
+
+  - name: Download Ranger sources
+    get_url:
+      dest: "{{ ranger_tgz }}"
+      force: yes
+      timeout: 600
+      url: "http://apache-mirror.rbc.ru/pub/apache/ranger/{{ ranger_version }}/apache-ranger-{{ ranger_version }}.tar.gz"
+
+  - name: Unpack Ranger sources
+    unarchive:
+      dest: "{{ ranger_build_dir }}"
+      src: "{{ ranger_tgz }}"
+      remote_src: yes
