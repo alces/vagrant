@@ -1,0 +1,17 @@
+- name: Install Apache Ranger
+  become: yes
+  hosts: all
+  gather_facts: no
+  tasks:
+  - name: Install packages
+    yum:
+      name:
+      - java-1.8.0-openjdk
+      - net-tools
+      - mariadb-server
+
+  - name: Start MySQL service
+    service:
+      name: mariadb
+      enabled: yes
+      state: started
