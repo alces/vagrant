@@ -129,5 +129,17 @@
     shell: "./setup.sh && ./set_globals.sh"
     args:
       chdir: "{{ ranger_dir }}"
+      creates: /etc/init.d/ranger-admin
     environment:
       JAVA_HOME: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.x86_64
+
+  - name: Fix permissions for startup script
+    file:
+      name: "{{ ranger_dir }}/ews/ranger-admin-services.sh"
+      mode: 0555
+
+  - name: Enable Ranger Admin service
+    service:
+      name: ranger-admin
+      enabled: yes
+      state: started
