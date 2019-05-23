@@ -11,6 +11,10 @@
     ranger_dir: "/usr/local/ranger-{{ ranger_version }}-admin"
     ranger_target_dir: "{{ ranger_build_dir }}/target"
     ranger_tgz: /var/tmp/ranger.tgz
+    solr_version: 8.1.0
+    solr_dir: "/usr/local/solr-{{ solr_version }}"
+    solr_bin_dir: "{{ solr_dir }}/bin"
+    solr_tgz: /var/tmp/solr.tgz
   tasks:
   - name: Install packages
     yum:
@@ -18,6 +22,7 @@
       - git
       - gcc
       - java-1.8.0-openjdk
+      - lsof
       - mariadb-server
       - mysql-connector-java
       - net-tools
@@ -40,6 +45,42 @@
       dest: "{{ maven_dir | dirname }}"
       src: "{{ maven_tgz }}"
       remote_src: yes
+
+  - name: Download Solr
+    get_url:
+      dest: "{{ solr_tgz }}"
+      force: yes
+      timeout: 600
+      url: "http://apache-mirror.rbc.ru/pub/apache/lucene/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
+
+  - name: Create solr group
+    group:
+      name: solr
+
+  - name: Create solr user
+    user:
+      name: solr
+      group: solr
+      home: /noexistent
+
+  - name: Unpack Solr
+    unarchive:
+      dest: "{{ solr_dir | dirname }}"
+      src: "{{ solr_tgz }}"
+      owner: solr
+      group: solr
+      remote_src: yes
+
+  - name: Disable limit checks in Solr profile
+    lineinfile:
+      dest: "{{ solr_bin_dir }}/solr.in.sh"
+      line: SOLR_ULIMIT_CHECKS=false
+
+  - name: Start Solr
+    command: "{{ solr_bin_dir }}/solr start"
+    args:
+      creates: "{{ solr_bin_dir }}/solr-8983.pid"
+    become_user: solr
 
   - name: Download Ranger sources
     get_url:
