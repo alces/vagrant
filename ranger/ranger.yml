@@ -6,6 +6,7 @@
     maven_version: 3.3.3
     maven_dir: "/usr/local/apache-maven-{{ maven_version }}"
     maven_tgz: /var/tmp/maven.tgz
+    ranger_db_pass: S0meCrYptoGr4phicTh1ng
     ranger_version: 1.2.0
     ranger_build_dir: "/var/tmp/apache-ranger-{{ ranger_version }}"
     ranger_dir: "/usr/local/ranger-{{ ranger_version }}-admin"
@@ -119,7 +120,7 @@
       replace: "{{ item.key }}={{ item.value }}"
     with_dict:
       audit_solr_urls: http://localhost:8983/solr/ranger_audits
-      db_password: S0meCrYptoGr4phicTh1ng
+      db_password: "{{ ranger_db_pass }}"
       rangerAdmin_password: S1meCrYptoGr4phicTh1ng
       rangerTagsync_password: S2meCrYptoGr4phicTh1ng
       rangerUsersync_password: S3meCrYptoGr4phicTh1ng
@@ -138,8 +139,15 @@
       name: "{{ ranger_dir }}/ews/ranger-admin-services.sh"
       mode: 0555
 
+  - name: Fix DB password in ranger-admin-site.xml
+    lineinfile:
+      dest: "{{ ranger_dir }}/conf/ranger-admin-site.xml"
+      line: "                <value>{{ ranger_db_pass }}</value>"
+      regexp: '^\s+<value>_</value>'
+      insertafter: '<name>ranger.jpa.jdbc.password</name>'
+
   - name: Enable Ranger Admin service
-    service:
+    sysvinit:
       name: ranger-admin
       enabled: yes
       state: started
