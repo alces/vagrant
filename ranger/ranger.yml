@@ -3,14 +3,14 @@
   hosts: all
   gather_facts: no
   vars:
-    maven_tgz: /var/tmp/maven.tgz
     maven_version: 3.3.3
     maven_dir: "/usr/local/apache-maven-{{ maven_version }}"
-    ranger_tgz: /var/tmp/ranger.tgz
+    maven_tgz: /var/tmp/maven.tgz
     ranger_version: 1.2.0
-    ranger_subdir: "apache-ranger-{{ ranger_version }}"
-    ranger_build_dir: "/var/tmp/{{ ranger_subdir }}"
-    ranger_dir: "/usr/local/{{ ranger_subdir }}"
+    ranger_build_dir: "/var/tmp/apache-ranger-{{ ranger_version }}"
+    ranger_dir: "/usr/local/ranger-{{ ranger_version }}-admin"
+    ranger_target_dir: "{{ ranger_build_dir }}/target"
+    ranger_tgz: /var/tmp/ranger.tgz
   tasks:
   - name: Install packages
     yum:
@@ -19,6 +19,7 @@
       - gcc
       - java-1.8.0-openjdk
       - mariadb-server
+      - mysql-connector-java
       - net-tools
 
   - name: Start MySQL service
@@ -57,7 +58,15 @@
     command: "mvn clean package assembly:assembly"
     args:
       chdir: "{{ ranger_build_dir }}"
+      # the last artifact generated during the build
+      creates: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-kylin-plugin.zip"
     environment:
       PATH: "{{ maven_dir }}/bin:/usr/bin:/bin"
       M2_HOME: "{{ maven_dir }}"
       MAVEN_OPTS: -Xmx512M
+
+  - name: Unpack Ranger Admin
+    unarchive:
+      dest: "{{ ranger_dir | dirname }}"
+      src: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-admin.tar.gz"
+      remote_src: yes
