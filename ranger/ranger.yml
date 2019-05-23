@@ -3,17 +3,22 @@
   hosts: all
   gather_facts: no
   vars:
-    ranger_build_dir: /var/tmp
-    ranger_dir: /usr/local
+    maven_tgz: /var/tmp/maven.tgz
+    maven_version: 3.3.3
+    maven_dir: "/usr/local/apache-maven-{{ maven_version }}"
     ranger_tgz: /var/tmp/ranger.tgz
     ranger_version: 1.2.0
+    ranger_subdir: "apache-ranger-{{ ranger_version }}"
+    ranger_build_dir: "/var/tmp/{{ ranger_subdir }}"
+    ranger_dir: "/usr/local/{{ ranger_subdir }}"
   tasks:
   - name: Install packages
     yum:
       name:
+      - git
+      - gcc
       - java-1.8.0-openjdk
       - mariadb-server
-      - maven
       - net-tools
 
   - name: Start MySQL service
@@ -21,6 +26,19 @@
       name: mariadb
       enabled: yes
       state: started
+
+  - name: Download Maven
+    get_url:
+      dest: "{{ maven_tgz }}"
+      force: yes
+      timeout: 600
+      url: "https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
+
+  - name: Unpack Maven
+    unarchive:
+      dest: "{{ maven_dir | dirname }}"
+      src: "{{ maven_tgz }}"
+      remote_src: yes
 
   - name: Download Ranger sources
     get_url:
@@ -31,6 +49,15 @@
 
   - name: Unpack Ranger sources
     unarchive:
-      dest: "{{ ranger_build_dir }}"
+      dest: "{{ ranger_build_dir | dirname }}"
       src: "{{ ranger_tgz }}"
       remote_src: yes
+
+  - name: Build Ranger
+    command: "mvn clean package assembly:assembly"
+    args:
+      chdir: "{{ ranger_build_dir }}"
+    environment:
+      PATH: "{{ maven_dir }}/bin:/usr/bin:/bin"
+      M2_HOME: "{{ maven_dir }}"
+      MAVEN_OPTS: -Xmx512M
