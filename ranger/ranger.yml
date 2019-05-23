@@ -49,7 +49,6 @@
   - name: Download Solr
     get_url:
       dest: "{{ solr_tgz }}"
-      force: yes
       timeout: 600
       url: "http://apache-mirror.rbc.ru/pub/apache/lucene/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
 
@@ -62,6 +61,7 @@
       name: solr
       group: solr
       home: /noexistent
+      create_home: no
 
   - name: Unpack Solr
     unarchive:
@@ -111,3 +111,23 @@
       dest: "{{ ranger_dir | dirname }}"
       src: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-admin.tar.gz"
       remote_src: yes
+
+  - name: Fix Ranger configuration
+    replace:
+      dest: "{{ ranger_dir }}/install.properties"
+      regexp: "^{{ item.key }}="
+      replace: "{{ item.key }}={{ item.value }}"
+    with_dict:
+      audit_solr_urls: http://localhost:8983/solr/ranger_audits
+      db_password: S0meCrYptoGr4phicTh1ng
+      rangerAdmin_password: S1meCrYptoGr4phicTh1ng
+      rangerTagsync_password: S2meCrYptoGr4phicTh1ng
+      rangerUsersync_password: S3meCrYptoGr4phicTh1ng
+      keyadmin_password: S4meCrYptoGr4phicTh1ng
+
+  - name: Setup Ranger Admin
+    shell: "./setup.sh && ./set_globals.sh"
+    args:
+      chdir: "{{ ranger_dir }}"
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.x86_64
