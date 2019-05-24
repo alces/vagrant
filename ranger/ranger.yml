@@ -2,27 +2,15 @@
   become: yes
   hosts: all
   gather_facts: no
-  vars:
-    maven_version: 3.3.3
-    maven_dir: "/usr/local/apache-maven-{{ maven_version }}"
-    maven_tgz: /var/tmp/maven.tgz
-    ranger_db_pass: S0meCrYptoGr4phicTh1ng
-    ranger_version: 1.2.0
-    ranger_build_dir: "/var/tmp/apache-ranger-{{ ranger_version }}"
-    ranger_dir: "/usr/local/ranger-{{ ranger_version }}-admin"
-    ranger_target_dir: "{{ ranger_build_dir }}/target"
-    ranger_tgz: /var/tmp/ranger.tgz
-    solr_version: 8.1.0
-    solr_dir: "/usr/local/solr-{{ solr_version }}"
-    solr_bin_dir: "{{ solr_dir }}/bin"
-    solr_tgz: /var/tmp/solr.tgz
+  vars_files:
+  - vars.yml
   tasks:
   - name: Install packages
     yum:
       name:
       - git
       - gcc
-      - java-1.8.0-openjdk
+      - java-1.8.0-openjdk-devel
       - lsof
       - mariadb-server
       - mysql-connector-java
@@ -37,7 +25,6 @@
   - name: Download Maven
     get_url:
       dest: "{{ maven_tgz }}"
-      force: yes
       timeout: 600
       url: "https://archive.apache.org/dist/maven/maven-3/{{ maven_version }}/binaries/apache-maven-{{ maven_version }}-bin.tar.gz"
 
@@ -83,10 +70,46 @@
       creates: "{{ solr_bin_dir }}/solr-8983.pid"
     become_user: solr
 
+  - name: Download Kafka
+    get_url:
+      dest: "{{ kafka_tgz }}"
+      timeout: 600
+      url: "http://apache-mirror.rbc.ru/pub/apache/kafka/{{ kafka_version.split('-')[1] }}/kafka_2.12-{{ kafka_version }}.tgz"
+
+  - name: Create kafka group
+    group:
+      name: kafka
+
+  - name: Create kafka user
+    user:
+      name: kafka
+      group: kafka
+      home: /noexistent
+      create_home: no
+
+  - name: Unpack Kafka
+    unarchive:
+      dest: "{{ kafka_dir | dirname }}"
+      src: "{{ kafka_tgz }}"
+      owner: kafka
+      group: kafka
+      remote_src: yes
+
+  - name: Start zookeeper
+    shell: "nohup ./bin/zookeeper-server-start.sh ./config/zookeeper.properties &"
+    args:
+      chdir: "{{ kafka_dir }}"
+    become_user: kafka
+
+  - name: Start Kafka
+    shell: "nohup ./bin/kafka-server-start.sh ./config/server.properties &"
+    args:
+      chdir: "{{ kafka_dir }}"
+    become_user: kafka
+
   - name: Download Ranger sources
     get_url:
       dest: "{{ ranger_tgz }}"
-      force: yes
       timeout: 600
       url: "http://apache-mirror.rbc.ru/pub/apache/ranger/{{ ranger_version }}/apache-ranger-{{ ranger_version }}.tar.gz"
 
