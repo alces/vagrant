@@ -174,3 +174,27 @@
       name: ranger-admin
       enabled: yes
       state: started
+
+  - name: Unpack Ranger Kafka plugin
+    unarchive:
+      dest: "{{ ranger_dir | dirname }}"
+      src: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-kafka-plugin.tar.gz"
+      remote_src: yes
+
+  - name: Fix Ranger Kafka plugin configuration
+    replace:
+      dest: "{{ ranger_dir }}/install.properties"
+      regexp: "^{{ item.key }}="
+      replace: "{{ item.key }}={{ item.value }}"
+    with_dict:
+      COMPONENT_INSTALL_DIR_NAME: "{{ kafka_dir }}"
+      POLICY_MGR_URL: http://localhost:6080
+      REPOSITORY_NAME: kafkadev
+
+  - name: Setup Ranger Kafka plugin
+    shell: ./enable-kafka-plugin.sh
+    args:
+      chdir: "{{ ranger_kafka_dir }}"
+      creates: "{{ kafka_dir }}/libs/ranger-kafka-plugin-impl"
+    environment:
+      JAVA_HOME: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.x86_64
