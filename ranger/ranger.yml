@@ -136,23 +136,16 @@
     become_user: kafka
 
   - name: Download Ranger sources
-    get_url:
-      dest: "{{ ranger_tgz }}"
-      timeout: 600
-      url: "http://apache-mirror.rbc.ru/pub/apache/ranger/{{ ranger_version }}/apache-ranger-{{ ranger_version }}.tar.gz"
-
-  - name: Unpack Ranger sources
-    unarchive:
-      dest: "{{ ranger_build_dir | dirname }}"
-      src: "{{ ranger_tgz }}"
-      remote_src: yes
+    git:
+      repo: https://github.com/apache/ranger
+      dest: "{{ ranger_build_dir }}"
+      version: master
 
   - name: Build Ranger
     command: "mvn clean package assembly:assembly"
     args:
       chdir: "{{ ranger_build_dir }}"
-      # the last artifact generated during the build
-      creates: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-kylin-plugin.zip"
+      creates: "{{ ranger_target_dir }}/ranger-{{ ranger_version }}-admin.zip"
     environment:
       PATH: "{{ maven_dir }}/bin:/usr/bin:/bin"
       M2_HOME: "{{ maven_dir }}"
@@ -171,6 +164,7 @@
       replace: "{{ item.key }}={{ item.value }}"
     with_dict:
       audit_solr_urls: http://localhost:8983/solr/ranger_audits
+      db_name: "ranger{{ ranger_version.split('.')[0] }}"
       db_password: "{{ ranger_db_pass }}"
       rangerAdmin_password: S1meCrYptoGr4phicTh1ng
       rangerTagsync_password: S2meCrYptoGr4phicTh1ng

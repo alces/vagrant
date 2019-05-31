@@ -2,7 +2,7 @@ kafka_admin_user: kafka
 kafka_admin_pass: ass4afka
 kafka_client_user: klient
 kafka_client_pass: ass4lient
-kafka_version: 2.12-2.2.0
+kafka_version: 2.12-2.0.0
 kafka_dir: "/usr/local/kafka_{{ kafka_version }}"
 kafka_conf_dir: "{{ kafka_dir }}/config"
 kafka_jaas_conf: "{{ kafka_conf_dir }}/kafka_server_jaas.conf"
@@ -11,12 +11,11 @@ maven_version: 3.3.3
 maven_dir: "/usr/local/apache-maven-{{ maven_version }}"
 maven_tgz: /var/tmp/maven.tgz
 ranger_db_pass: S0meCrYptoGr4phicTh1ng
-ranger_version: 1.2.0
-ranger_build_dir: "/var/tmp/apache-ranger-{{ ranger_version }}"
+ranger_version: 2.0.0-SNAPSHOT
+ranger_build_dir: /var/tmp/ranger
 ranger_dir: "/usr/local/ranger-{{ ranger_version }}-admin"
 ranger_kafka_dir: "/usr/local/ranger-{{ ranger_version }}-kafka-plugin"
 ranger_target_dir: "{{ ranger_build_dir }}/target"
-ranger_tgz: /var/tmp/ranger.tgz
 solr_version: 8.1.0
 solr_dir: "/usr/local/solr-{{ solr_version }}"
 solr_bin_dir: "{{ solr_dir }}/bin"
