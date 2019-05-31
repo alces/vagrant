@@ -1,7 +1,6 @@
 - name: Install Apache Ranger
   become: yes
   hosts: all
-  gather_facts: no
   vars_files:
   - vars.yml
   tasks:
@@ -95,6 +94,31 @@
       group: kafka
       remote_src: yes
 
+  - name: Create Kafka JAAS config
+    template:
+      src: kafka_server_jaas.conf.j2
+      dest: "{{ kafka_jaas_conf }}"
+
+  - name: Create Kafka client properties
+    template:
+      src: "{{ conf_name }}.j2"
+      dest: "{{ kafka_conf_dir }}/{{ conf_name }}"
+    vars:
+      conf_name: "client-{{ item }}.properties"
+    with_items:
+    - admin
+    - user
+
+  - name: Add SASL configuration to Kafka
+    blockinfile:
+      block: |
+        sasl.enabled.mechanisms=PLAIN
+        sasl.mechanism.inter.broker.protocol=PLAIN
+        security.inter.broker.protocol=SASL_PLAINTEXT
+        listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
+        advertised.listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
+      path: "{{ kafka_conf_dir }}/server.properties"
+
   - name: Start zookeeper
     shell: "nohup ./bin/zookeeper-server-start.sh ./config/zookeeper.properties &"
     args:
@@ -106,6 +130,8 @@
     args:
       chdir: "{{ kafka_dir }}"
     become_user: kafka
+    environment:
+      KAFKA_OPTS: "-Djava.security.auth.login.config={{ kafka_jaas_conf }}"
 
   - name: Download Ranger sources
     get_url:

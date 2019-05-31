@@ -1,0 +1,5 @@
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+  username="{{ kafka_admin_user }}" \
+  password="{{ kafka_admin_pass }}";
+sasl.mechanism=PLAIN
+security.protocol=SASL_PLAINTEXT
