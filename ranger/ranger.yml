@@ -73,7 +73,7 @@
     get_url:
       dest: "{{ kafka_tgz }}"
       timeout: 600
-      url: "http://apache-mirror.rbc.ru/pub/apache/kafka/{{ kafka_version.split('-')[1] }}/kafka_2.12-{{ kafka_version }}.tgz"
+      url: "https://archive.apache.org/dist/kafka/{{ kafka_version.split('-')[1] }}/kafka_{{ kafka_version }}.tgz"
 
   - name: Create kafka group
     group:
@@ -93,6 +93,13 @@
       owner: kafka
       group: kafka
       remote_src: yes
+
+  - name: Create symlink
+    file:
+      name: /usr/kafka
+      state: link
+      src: "{{ kafka_dir }}"
+      force: yes
 
   - name: Create Kafka JAAS config
     template:
@@ -127,14 +134,6 @@
     args:
       chdir: "{{ kafka_dir }}"
     become_user: kafka
-
-  - name: Start Kafka
-    shell: "nohup ./bin/kafka-server-start.sh ./config/server.properties &"
-    args:
-      chdir: "{{ kafka_dir }}"
-    become_user: kafka
-    environment:
-      KAFKA_OPTS: "-Djava.security.auth.login.config={{ kafka_jaas_conf }}"
 
   - name: Download Ranger sources
     get_url:
@@ -212,11 +211,11 @@
 
   - name: Fix Ranger Kafka plugin configuration
     replace:
-      dest: "{{ ranger_dir }}/install.properties"
+      dest: "{{ ranger_kafka_dir }}/install.properties"
       regexp: "^{{ item.key }}="
       replace: "{{ item.key }}={{ item.value }}"
     with_dict:
-      COMPONENT_INSTALL_DIR_NAME: "{{ kafka_dir }}"
+      COMPONENT_INSTALL_DIR_NAME: "{{ kafka_dir | dirname }}/"
       POLICY_MGR_URL: http://localhost:6080
       REPOSITORY_NAME: kafkadev
 
@@ -227,3 +226,11 @@
       creates: "{{ kafka_dir }}/libs/ranger-kafka-plugin-impl"
     environment:
       JAVA_HOME: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.212.b04-0.el7_6.x86_64
+
+  - name: Start Kafka
+    shell: "nohup ./bin/kafka-server-start.sh ./config/server.properties &"
+    args:
+      chdir: "{{ kafka_dir }}"
+    become_user: kafka
+    environment:
+      KAFKA_OPTS: "-Djava.security.auth.login.config={{ kafka_jaas_conf }}"
