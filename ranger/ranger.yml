@@ -112,11 +112,14 @@
   - name: Add SASL configuration to Kafka
     blockinfile:
       block: |
+        advertised.listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
+        allow.everyone.if.no.acl.found=true
+        authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
+        listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
         sasl.enabled.mechanisms=PLAIN
         sasl.mechanism.inter.broker.protocol=PLAIN
         security.inter.broker.protocol=SASL_PLAINTEXT
-        listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
-        advertised.listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
+        super.users=User:{{ kafka_admin_user }}
       path: "{{ kafka_conf_dir }}/server.properties"
 
   - name: Start zookeeper
