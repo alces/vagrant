@@ -1,5 +1,7 @@
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
-  username="{{ kafka_client_user }}" \
-  password="{{ kafka_client_pass }}";
-sasl.mechanism=PLAIN
+sasl.jaas.config=   com.sun.security.auth.module.Krb5LoginModule required \
+   keyTab="{{ kafka_conf_dir }}/ksql.keytab" \
+   principal="ksql/localhost@{{ kerberos_realm.upper() }}" \
+   storeKey=true \
+   useKeyTab=true;
+sasl.mechanism=GSSAPI
 security.protocol=SASL_PLAINTEXT

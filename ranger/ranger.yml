@@ -10,10 +10,12 @@
       - git
       - gcc
       - java-1.8.0-openjdk-devel
+      - krb5-workstation
       - lsof
       - mariadb-server
       - mysql-connector-java
       - net-tools
+      - ntpdate
 
   - name: Start MySQL service
     service:
@@ -101,6 +103,19 @@
       src: "{{ kafka_dir }}"
       force: yes
 
+  - name: Create Kerberos config
+    template:
+      src: krb5.conf.j2
+      dest: /etc/krb5.conf
+
+  - name: Upload keytabs
+    copy:
+      src: "{{ item }}.keytab"
+      dest: "{{ kafka_conf_dir }}"
+    with_items:
+    - kafka
+    - ksql
+
   - name: Create Kafka JAAS config
     template:
       src: kafka_server_jaas.conf.j2
@@ -123,10 +138,11 @@
         allow.everyone.if.no.acl.found=true
         authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
         listeners=SASL_PLAINTEXT://{{ ansible_default_ipv4.address }}:9092
-        sasl.enabled.mechanisms=PLAIN
-        sasl.mechanism.inter.broker.protocol=PLAIN
+        sasl.enabled.mechanisms=GSSAPI
+        sasl.kerberos.service.name=kafka
+        sasl.mechanism.inter.broker.protocol=GSSAPI
         security.inter.broker.protocol=SASL_PLAINTEXT
-        super.users=User:{{ kafka_admin_user }}
+        super.users=User:kafka
       path: "{{ kafka_conf_dir }}/server.properties"
 
   - name: Start zookeeper
