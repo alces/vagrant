@@ -1,0 +1,16 @@
+Vagrant.configure(2) do |config|
+  config.vm.box = 'centos/7'
+  (1..3).each do |num|
+    config.vm.define "zook#{num}" do |host|
+      host.vm.hostname = "zook-#{num}.griddynamics.net"
+      host.vm.network :private_network, ip: "192.168.168.1#{num}"
+      if num == 3
+        host.vm.provision :ansible do |ansible|
+          ansible.limit = 'all'
+          ansible.playbook = 'zookeeper.yml'
+          ansible.raw_arguments = ['-v']
+        end
+      end
+    end
+  end
+end
