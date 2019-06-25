@@ -1,0 +1,18 @@
+- name: Install PostgreSQL nodes
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install packages
+    yum:
+      name: postgresql-server
+
+  - name: Init database
+    command: postgresql-setup initdb
+    args:
+      creates: /var/lib/pgsql/data/PG_VERSION
+
+  - name: Enable postgresql service
+    service:
+      name: postgresql
+      enabled: yes
+      state: started

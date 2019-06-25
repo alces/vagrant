@@ -3,7 +3,7 @@ dataDir={{ zookeeperDataDir }}
 clientPort=2181
 initLimit=5
 syncLimit=2
-{% for srv in groups['all'] %}
+{% for srv in groups['zookeeper'] %}
 {% set addr = hostvars[srv].ansible_eth1.ipv4.address %}
 server.{{ addr.split('.')[-1] }}={{ addr }}:2888:3888
 {% endfor %}
