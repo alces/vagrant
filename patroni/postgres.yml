@@ -1,11 +1,17 @@
-- name: Install packages
+- name: Install standard packages and repositories
   yum:
     name:
     - gcc
-    - postgresql-devel
-    - postgresql-server
     - python-devel
     - python-setuptools
+    - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+- name: Install PostgreSQL
+  yum:
+    name:
+    - postgresql96-devel
+    - postgresql96-server
 
 - name: Install pip
   easy_install:
@@ -21,14 +27,24 @@
     name:
     - psycopg2>=2.5.4
     - patroni[zookeeper]
+  environment:
+    PATH: /usr/pgsql-9.6/bin:/usr/bin:/bin
 
-- name: Init database
-  command: postgresql-setup initdb
-  args:
-    creates: /var/lib/pgsql/data/PG_VERSION
+- name: Create patroni config
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+    group: postgres
+    mode: 0640
 
-- name: Enable postgresql service
-  service:
-    name: postgresql
+- name: Create patroni service
+  copy:
+    src: patroni.service
+    dest: /etc/systemd/system
+
+- name: Enable patroni service
+  systemd:
+    name: patroni
     enabled: yes
     state: started
+    daemon_reload: yes
