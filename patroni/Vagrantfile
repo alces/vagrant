@@ -8,6 +8,7 @@ Vagrant.configure(2) do |config|
       if num == 3
         host.vm.provision :ansible do |ansible|
           ansible.groups = {
+            'haproxy' =>  ['patroni-3'],
             'postgres' => ['patroni-1', 'patroni-2'],
             'zookeeper'=> ['patroni-1', 'patroni-2', 'patroni-3']
           }
