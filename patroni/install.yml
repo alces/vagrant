@@ -1,0 +1,18 @@
+- name: Install zookeeper cluster
+  hosts: zookeeper
+  become: yes
+  tasks:
+  - include_tasks: zookeeper.yml
+    vars:
+      zookeeperTgz: "{{ playbook_dir }}/zookeeper.tgz"
+      zookeeperVersion: '3.5.5'
+      zookeeperName: "apache-zookeeper-{{ zookeeperVersion }}-bin"
+      zookeeperDir: "/opt/{{ zookeeperName }}"
+      zookeeperDataDir: "{{ zookeeperDir }}/data"
+      zookeeperLogsDir: "{{ zookeeperDir }}/logs"
+
+- name: Install PostgreSQL nodes
+  hosts: postgres
+  become: yes
+  tasks:
+  - include_tasks: postgres.yml

@@ -1,21 +1,34 @@
-- name: Install PostgreSQL nodes
-  hosts: all
-  become: yes
-  tasks:
-  - name: Install packages
-    yum:
-      name:
-      - postgresql-server
-      - python-psycopg2
-      - python-setuptools
+- name: Install packages
+  yum:
+    name:
+    - gcc
+    - postgresql-devel
+    - postgresql-server
+    - python-devel
+    - python-setuptools
 
-  - name: Init database
-    command: postgresql-setup initdb
-    args:
-      creates: /var/lib/pgsql/data/PG_VERSION
+- name: Install pip
+  easy_install:
+    name: pip
 
-  - name: Enable postgresql service
-    service:
-      name: postgresql
-      enabled: yes
-      state: started
+- name: Upgrade setuptools
+  pip:
+    name: setuptools
+    extra_args: '--upgrade'
+
+- name: Install patroni
+  pip:
+    name:
+    - psycopg2>=2.5.4
+    - patroni[zookeeper]
+
+- name: Init database
+  command: postgresql-setup initdb
+  args:
+    creates: /var/lib/pgsql/data/PG_VERSION
+
+- name: Enable postgresql service
+  service:
+    name: postgresql
+    enabled: yes
+    state: started

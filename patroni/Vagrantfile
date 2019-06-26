@@ -1,23 +1,19 @@
 Vagrant.configure(2) do |config|
   config.vm.box = 'centos/7'
-  ip_num = 10
-  {'zookeeper' => 3, 'postgres' => 2}.each do |typ, cnt|
-    (1..cnt).each do |num|
-      host_name = "#{typ}-#{num}"
-      config.vm.define host_name do |host|
-        host.vm.hostname = "#{host_name}.griddynamics.net"
-        ip_num += 1
-        host.vm.network :private_network, ip: "192.168.168.#{ip_num}"
-        if num == cnt
-          host.vm.provision :ansible do |ansible|
-            ansible.groups = {
-              'postgres' => ['postgres-1', 'postgres-2'],
-              'zookeeper'=> ['zookeeper-1', 'zookeeper-2', 'zookeeper-3']
-            }
-            ansible.limit = typ
-            ansible.playbook = "#{typ}.yml"
-            ansible.raw_arguments = ['-v']
-          end
+  (1..3).each do |num|
+    host_name = "patroni-#{num}"
+    config.vm.define host_name do |host|
+      host.vm.hostname = "#{host_name}.griddynamics.net"
+      host.vm.network :private_network, ip: "192.168.168.1#{num}"
+      if num == 3
+        host.vm.provision :ansible do |ansible|
+          ansible.groups = {
+            'postgres' => ['patroni-1', 'patroni-2'],
+            'zookeeper'=> ['patroni-1', 'patroni-2', 'patroni-3']
+          }
+          ansible.limit = 'all'
+          ansible.playbook = 'install.yml'
+          ansible.raw_arguments = ['-v']
         end
       end
     end

@@ -1,65 +1,53 @@
-- name: Install zookeeper cluster
-  hosts: all
-  become: yes
-  vars:
-    zookeeperTgz: "{{ playbook_dir }}/zookeeper.tgz"
-    zookeeperVersion: '3.5.5'
-    zookeeperName: "apache-zookeeper-{{ zookeeperVersion }}-bin"
-    zookeeperDir: "/opt/{{ zookeeperName }}"
-    zookeeperDataDir: "{{ zookeeperDir }}/data"
-    zookeeperLogsDir: "{{ zookeeperDir }}/logs"
+- name: Install required packages
+  yum:
+    name: java-1.8.0-openjdk
 
-  tasks:
-  - name: Install required packages
-    yum:
-      name: java-1.8.0-openjdk
+- name: Create group
+  group:
+    name: zookeeper
 
-  - name: Create group
-    group:
-      name: zookeeper
+- name: Create user
+  user:
+    name: zookeeper
+    group: zookeeper
+    home: "{{ zookeeperDir }}"
 
-  - name: Create user
-    user:
-      name: zookeeper
-      group: zookeeper
-      home: "{{ zookeeperDir }}"
+- name: Make directories
+  file:
+    name: "{{ item }}"
+    owner: zookeeper
+    state: directory
+  with_items:
+  - "{{ zookeeperDataDir }}"
+  - "{{ zookeeperLogsDir }}"
 
-  - name: Make directories
-    file:
-      name: "{{ item }}"
-      owner: zookeeper
-      state: directory
-    with_items:
-    - "{{ zookeeperDataDir }}"
-    - "{{ zookeeperLogsDir }}"
+- name: Download zookeeper
+  get_url:
+    dest: "{{ zookeeperTgz }}"
+    timeout: 600
+    url: "http://mirror.linux-ia64.org/apache/zookeeper/zookeeper-{{ zookeeperVersion }}/{{ zookeeperName }}.tar.gz"
+  become: no
+  delegate_to: localhost
+  run_once: yes
 
-  - name: Download zookeeper
-    get_url:
-      dest: "{{ zookeeperTgz }}"
-      timeout: 600
-      url: "http://mirror.linux-ia64.org/apache/zookeeper/zookeeper-{{ zookeeperVersion }}/{{ zookeeperName }}.tar.gz"
-    become: no
-    delegate_to: localhost
-    run_once: yes
+- name: Unpack zookeeper
+  unarchive:
+    dest: "{{ zookeeperDir | dirname }}"
+    src: "{{ zookeeperTgz }}"
 
-  - name: Unpack zookeeper
-    unarchive:
-      dest: "{{ zookeeperDir | dirname }}"
-      src: "{{ zookeeperTgz }}"
+- name: Create zoo.cfg
+  template:
+    src: zoo.cfg.j2
+    dest: "{{ zookeeperDir }}/conf/zoo.cfg"
 
-  - name: Create zoo.cfg
-    template:
-      src: zoo.cfg.j2
-      dest: "{{ zookeeperDir }}/conf/zoo.cfg"
+- name: Create myid
+  template:
+    src: myid.j2
+    dest: "{{ zookeeperDataDir }}/myid"
 
-  - name: Create myid
-    template:
-      src: myid.j2
-      dest: "{{ zookeeperDataDir }}/myid"
-
-  - name: Start zookeeper
-    command: "bin/zkServer.sh start"
-    args:
-      chdir: "{{ zookeeperDir }}"
-    become_user: zookeeper
-
+- name: Start zookeeper
+  command: "bin/zkServer.sh start"
+  args:
+    chdir: "{{ zookeeperDir }}"
+    creates: "{{ zookeeperDataDir }}/zookeeper_server.pid"
+  become_user: zookeeper
