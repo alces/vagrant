@@ -6,6 +6,7 @@
     yum:
       name:
       - docker
+      - git
       - net-tools
 
   - name: Make docker listen to network
@@ -26,3 +27,10 @@
       name: vagrant
       groups: root
       append: yes
+
+  - name: Copy RSA ID to vagrant user
+    copy:
+      src: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+      dest: /home/vagrant/.ssh/
+      mode: 0400
+      owner: vagrant
