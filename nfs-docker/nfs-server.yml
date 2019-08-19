@@ -1,0 +1,32 @@
+- name: Start NFS server
+  hosts: all
+  become: yes
+  vars:
+    shared_dirs:
+    - image
+    - overlay2
+    shared_root: /shares
+  tasks:
+  - name: Install packages
+    yum:
+      name:
+      - nfs-utils
+      - net-tools
+
+  - name: Create shared shared dirs
+    file:
+      path: "{{ shared_root }}/{{ item }}"
+      state: directory
+    with_items: "{{ shared_dirs }}"
+
+  - name: Add line to /etc/exports
+    lineinfile:
+      path: /etc/exports
+      line: "{{ shared_root }}/{{ item }} 192.168.168.0/24(rw,sync,no_root_squash)"
+    with_items: "{{ shared_dirs }}"
+
+  - name: Start NFS server
+    service:
+      name: nfs-server
+      enabled: yes
+      state: started
