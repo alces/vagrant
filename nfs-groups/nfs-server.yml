@@ -1,0 +1,37 @@
+- name: Start NFS server
+  hosts: all
+  become: yes
+  vars_files:
+  - vars.yml
+  tasks:
+  - name: Install packages
+    yum:
+      name:
+      - nfs-utils
+      - net-tools
+
+  - name: Create NFS group
+    group:
+      gid: "{{ nfs_group.gid }}"
+      name: "{{ nfs_group.name }}"
+
+  - name: Create shared shared dirs
+    file:
+      path: "{{ shared_root }}/{{ item }}"
+      state: directory
+      owner: root
+      group: "{{ nfs_group.name }}"
+      mode: "0{{ 2 if item.endswith('sticky') else '' }}770"
+    with_items: "{{ shared_dirs }}"
+
+  - name: Add line to /etc/exports
+    lineinfile:
+      path: /etc/exports
+      line: "{{ shared_root }}/{{ item }} 192.168.168.0/24(rw,sync,no_root_squash)"
+    with_items: "{{ shared_dirs }}"
+
+  - name: Start NFS server
+    service:
+      name: nfs-server
+      enabled: yes
+      state: started

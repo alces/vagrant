@@ -1,0 +1,8 @@
+---
+nfs_group:
+  gid: 10001
+  name: net-group
+shared_dirs:
+- group_rw
+- group_rw_sticky
+shared_root: /shares

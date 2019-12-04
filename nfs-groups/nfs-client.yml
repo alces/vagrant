@@ -1,0 +1,46 @@
+- name: Install NFS client
+  hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    host_num: "{{ ansible_all_ipv4_addresses[1].split('.')[-1] }}"
+    mount_root: /mnt
+  vars_files:
+  - vars.yml
+  tasks:
+  - name: Install packages
+    yum:
+      name:
+      - nfs-utils
+      - net-tools
+
+  - name: Create NFS group
+    group:
+      gid: "{{ nfs_group.gid }}"
+      name: "{{ nfs_group.name }}"
+
+  - name: Create mount points
+    file:
+      path: "{{ mount_root }}/{{ item }}"
+      state: directory
+    with_items: "{{ shared_dirs }}"
+
+  - name: Mount NFS shares
+    mount:
+      path: "{{ mount_root }}/{{ item }}"
+      src: "192.168.168.20:/{{ shared_root }}/{{ item }}"
+      fstype: nfs
+      state: mounted
+    with_items: "{{ shared_dirs }}"
+
+  - name: Create local group
+    group:
+      name: "{{ ansible_hostname }}"
+      gid: "100{{ host_num }}"
+
+  - name: Create NFS user
+    user:
+      name: "{{ ansible_hostname }}"
+      uid: "100{{ host_num }}"
+      group: "{{ ansible_hostname }}"
+      groups: "{{ nfs_group.name }}"
